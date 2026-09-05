@@ -2,9 +2,7 @@
 
 <a href="https://lovr.org"><img align="right" src="https://lovr.org/static/img/logo.svg" width="180"/></a>
 
-> **A simple Lua framework for rapidly building VR experiences.**
-
-You can use LÖVR to easily create VR experiences without much setup or programming experience.  The framework is tiny, fast, open source, and supports lots of different platforms and devices.
+> **A simple Lua framework for rapidly building 3D games and VR experiences.**
 
 [![Build](https://github.com/bjornbytes/lovr/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/bjornbytes/lovr/actions/workflows/build.yml)
 [![Version](https://img.shields.io/github/release/bjornbytes/lovr.svg?label=version)](https://github.com/bjornbytes/lovr/releases)
@@ -23,14 +21,15 @@ Features
 ---
 
 - **Cross-Platform** - Runs on Windows, macOS, Linux, and Android.
-- **Cross-Device** - Supports Vive/Index, Oculus Rift/Quest, Windows MR, and has a VR simulator.
+- **Cross-Device** - Supports any headset that works with OpenXR, and has a keyboard/mouse VR simulator.
 - **Beginner-friendly** - Simple VR scenes can be created in just a few lines of Lua.
 - **Fast** - Written in C11 and scripted with LuaJIT, includes optimized single-pass stereo rendering.
-- **Asset Import** - Supports 3D models (glTF, OBJ), skeletal animation, HDR textures, cubemaps, fonts, etc.
-- **Spatialized Audio** - Audio is automatically spatialized using HRTFs.
-- **Vector Library** - Efficient first-class support for 3D vectors, quaternions, and matrices.
-- **3D Rigid Body Physics** - Including 7 collider shapes, triangle mesh colliders, and 6 joint types.
-- **Compute Shaders** - For high performance GPU tasks, like particles.
+- **Tiny** - The whole framework is just a couple of megabytes, and it's easy to disable/remove modules.
+- **Powerful GPU APIs** - Compute shaders, ray tracing, indirect rendering, atomics, and more.
+- **Asset Import** - Supports glTF models, skeletal animation, compressed textures, cubemaps, fonts, etc.
+- **3D Rigid Body Physics** - Powered by JoltPhysics, with 7 collider shapes and 6 types of joints.
+- **Spatialized Audio** - Uses SteamAudio for audio spatialization, with HRTFs, audio meshes, and reverb.
+- **Vector Library** - Built-in 3D vectors, quaternions, and matrices.
 
 Getting Started
 ---
