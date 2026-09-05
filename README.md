@@ -1,6 +1,4 @@
-# LÖVR
-
-<a href="https://lovr.org"><img align="right" src="https://lovr.org/static/img/logo.svg" width="180"/></a>
+# <a href="https://lovr.org"><img src="https://lovr.org/static/img/logo.svg" width="28"/></a> LÖVR
 
 > **A simple Lua framework for rapidly building 3D games and VR experiences.**
 
@@ -22,12 +20,12 @@ Features
 
 - **Cross-Platform** - Runs on Windows, macOS, Linux, and Android.
 - **Cross-Device** - Supports any headset that works with OpenXR, and has a keyboard/mouse VR simulator.
-- **Beginner-friendly** - Simple VR scenes can be created in just a few lines of Lua.
+- **Beginner-friendly** - Simple scenes can be created in just a few lines of Lua.
 - **Fast** - Written in C11 and scripted with LuaJIT, includes optimized single-pass stereo rendering.
 - **Tiny** - The whole framework is just a couple of megabytes, and it's easy to disable/remove modules.
 - **Powerful GPU APIs** - Compute shaders, ray tracing, indirect rendering, atomics, and more.
 - **Asset Import** - Supports glTF models, skeletal animation, compressed textures, cubemaps, fonts, etc.
-- **3D Rigid Body Physics** - Powered by JoltPhysics, with 7 collider shapes and 6 types of joints.
+- **3D Rigid Body Physics** - Includes JoltPhysics, with 7 collider shapes and 6 types of joints.
 - **Spatialized Audio** - Uses SteamAudio for audio spatialization, with HRTFs, audio meshes, and reverb.
 - **Vector Library** - Built-in 3D vectors, quaternions, and matrices.
 
