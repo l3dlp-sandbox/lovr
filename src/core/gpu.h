@@ -806,6 +806,7 @@ typedef struct {
   bool depthResolve;
   bool foveation;
   bool rayQuery;
+  bool shaderDrawParameters;
   bool indirectDrawFirstInstance;
   bool packedBuffers;
   bool shaderDebug;

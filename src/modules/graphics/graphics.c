@@ -1007,6 +1007,7 @@ void lovrGraphicsGetFeatures(GraphicsFeatures* features) {
   features->depthClamp = state.features.depthClamp;
   features->depthResolve = state.features.depthResolve;
   features->raytracing = state.features.rayQuery;
+  features->shaderDrawParameters = state.features.shaderDrawParameters;
   features->indirectDrawFirstInstance = state.features.indirectDrawFirstInstance;
   features->packedBuffers = state.features.packedBuffers;
   features->float64 = state.features.float64;
@@ -10141,7 +10142,7 @@ static bool checkShaderFeatures(uint32_t* features, uint32_t count) {
       case 68: lovrCheck(state.features.subgroupQuad, "GPU does not support shader feature #%d: %s", features[i], "subgroup quad functions"); break;
       case 69: return lovrSetError("Shader uses unsupported feature #%d: %s", features[i], "layered rendering");
       case 70: return lovrSetError("Shader uses unsupported feature #%d: %s", features[i], "multiviewport");
-      case 4427: break; // ShaderDrawParameters
+      case 4427: lovrCheck(state.features.shaderDrawParameters, "GPU does not support shader features #%d: %s", features[i], "shader draw parameters"); break;
       case 4433: lovrCheck(state.features.float16 || state.features.int16, "GPU does not support shader feature #%d: %s", features[i], "16 bit storage buffers"); break;
       case 4434: return lovrSetError("Shader uses unsupported feature #%d: %s", features[i], "16 bit uniform/storage buffers");
       case 4436: return lovrSetError("Shader uses unsupported feature #%d: %s", features[i], "16 bit shader inputs/outputs");

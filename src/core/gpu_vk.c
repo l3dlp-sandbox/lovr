@@ -3223,13 +3223,13 @@ bool gpu_init(gpu_config* config) {
 
     VkPhysicalDeviceFeatures2 supported = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2 };
     VkPhysicalDeviceMultiviewFeatures multiviewFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES };
-    VkPhysicalDeviceShaderDrawParameterFeatures shaderDrawParameterFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETER_FEATURES };
     VkPhysicalDeviceSynchronization2FeaturesKHR synchronization2Features = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES_KHR };
+    VkPhysicalDeviceTimelineSemaphoreFeaturesKHR timelineSemaphoreFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR };
+    VkPhysicalDeviceShaderDrawParameterFeatures shaderDrawParameterFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETER_FEATURES };
     VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR };
     VkPhysicalDeviceScalarBlockLayoutFeaturesEXT scalarBlockLayoutFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES_EXT };
     VkPhysicalDeviceFragmentDensityMapFeaturesEXT fragmentDensityMapFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT };
     VkPhysicalDevicePipelineCreationCacheControlFeaturesEXT pipelineCreationCacheControlFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES_EXT };
-    VkPhysicalDeviceTimelineSemaphoreFeaturesKHR timelineSemaphoreFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES_KHR };
     VkPhysicalDeviceBufferDeviceAddressFeaturesKHR bufferDeviceAddressFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_KHR };
     VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
     VkPhysicalDeviceRayQueryFeaturesKHR rayQueryFeatures = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR };
@@ -3238,6 +3238,8 @@ bool gpu_init(gpu_config* config) {
     VkPhysicalDeviceShaderFloat16Int8Features float16int8Features = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES };
     VkPhysicalDevice8BitStorageFeatures storage8Features = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES };
     VkPhysicalDevice16BitStorageFeatures storage16Features = { .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES };
+
+    CHAIN(supported, shaderDrawParameterFeatures);
 
     if (state.extensions.foveation) {
       CHAIN(supported, fragmentDensityMapFeatures);
@@ -3284,14 +3286,15 @@ bool gpu_init(gpu_config* config) {
     multiviewFeatures.multiview = true;
     CHAIN(enabled, multiviewFeatures);
 
-    shaderDrawParameterFeatures.shaderDrawParameters = true;
-    CHAIN(enabled, shaderDrawParameterFeatures);
-
     synchronization2Features.synchronization2 = true;
     CHAIN(enabled, synchronization2Features);
 
     timelineSemaphoreFeatures.timelineSemaphore = true;
     CHAIN(enabled, timelineSemaphoreFeatures);
+
+    if (shaderDrawParameterFeatures.shaderDrawParameters) {
+      CHAIN(enabled, shaderDrawParameterFeatures);
+    }
 
     if (state.extensions.dynamicRendering) {
       dynamicRenderingFeatures.dynamicRendering = true;
@@ -3357,6 +3360,7 @@ bool gpu_init(gpu_config* config) {
       config->features->depthResolve = state.extensions.depthResolve;
       config->features->foveation = state.extensions.foveation;
       config->features->rayQuery = state.extensions.rayQuery && state.extensions.accelerationStructure;
+      config->features->shaderDrawParameters = shaderDrawParameterFeatures.shaderDrawParameters;
       config->features->indirectDrawFirstInstance = enabled.features.drawIndirectFirstInstance;
       config->features->packedBuffers = state.extensions.scalarBlockLayout;
       config->features->shaderDebug = state.extensions.shaderDebug;

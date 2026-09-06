@@ -23,6 +23,7 @@ dev
 - Add getters and setters for `Material` properties.
 - Add `doubleSided` property to `Material`.
 - Add `Model:setMaterial`.
+- Add `shaderDrawParameters` `GraphicsFeature`.
 
 ### Change
 
