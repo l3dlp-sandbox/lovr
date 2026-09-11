@@ -227,6 +227,7 @@ void lovrModelDataDestroy(void* ref);
 void lovrModelDataAllocate(ModelData* model);
 bool lovrModelDataFinalize(ModelData* model);
 void lovrModelDataGetTriangles(ModelData* model, float** vertices, uint32_t** indices, uint32_t* vertexCount, uint32_t* indexCount);
+void lovrModelDataGetMeshTriangles(ModelData* model, uint32_t mesh, float* transform, float** vertices, uint32_t** indices, uint32_t* vertexCount, uint32_t* indexCount);
 
 void lovrModelMetadataGetBoundingBox(ModelMetadata* meta, float box[6]);
 void lovrModelMetadataGetMeshBoundingBox(ModelMetadata* meta, uint32_t index, float box[6]);

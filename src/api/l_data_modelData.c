@@ -477,6 +477,32 @@ int l_lovrModelMetaGetMeshMaterial(lua_State* L) {
   return 1;
 }
 
+int l_lovrModelDataGetTriangles(lua_State* L) {
+  ModelData* model = luax_checktype(L, 1, ModelData);
+  float* vertices;
+  uint32_t* indices;
+  uint32_t vertexCount, indexCount;
+  if (lua_isnoneornil(L, 2)) {
+    lovrModelDataGetTriangles(model, &vertices, &indices, &vertexCount, &indexCount);
+  } else {
+    uint32_t mesh = luax_checkmeshindex(L, 2, &model->meta);
+    float transform[16];
+    luax_readmat4(L, 3, transform, 3);
+    lovrModelDataGetMeshTriangles(model, mesh, transform, &vertices, &indices, &vertexCount, &indexCount);
+  }
+  lua_createtable(L, (int) vertexCount, 0);
+  for (uint32_t i = 0; i < 3 * vertexCount; i++) {
+    lua_pushnumber(L, vertices[i]);
+    lua_rawseti(L, -2, (int) i + 1);
+  }
+  lua_createtable(L, (int) indexCount, 0);
+  for (uint32_t i = 0; i < indexCount; i++) {
+    lua_pushinteger(L, indices[i] + 1);
+    lua_rawseti(L, -2, (int) i + 1);
+  }
+  return 2;
+}
+
 static void luax_checkboundingbox(lua_State* L, int index, ModelMetadata* meta, float bounds[6]) {
   if (lua_type(L, index) == LUA_TNONE) {
     lovrModelMetadataGetBoundingBox(meta, bounds);
@@ -826,6 +852,7 @@ const luaL_Reg lovrModelData[] = {
   { "getMeshDrawMode", l_lovrModelMetaGetMeshDrawMode },
   { "getMeshDrawRange", l_lovrModelMetaGetMeshDrawRange },
   { "getMeshMaterial", l_lovrModelMetaGetMeshMaterial },
+  { "getTriangles", l_lovrModelDataGetTriangles },
 
   { "getWidth", l_lovrModelMetaGetWidth },
   { "getHeight", l_lovrModelMetaGetHeight },

@@ -25,6 +25,7 @@ dev
 - Add `Model:setMaterial`.
 - Add `shaderDrawParameters` `GraphicsFeature`.
 - Add `OriginType` parameter to `ModelData` node transform accessors.
+- Add `ModelData:getTriangles`.
 
 ### Change
 

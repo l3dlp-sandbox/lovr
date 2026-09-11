@@ -226,7 +226,7 @@ static void collectVertices(ModelData* model, uint32_t nodeIndex, float** vertic
 
     for (uint32_t i = 0; i < mesh->vertexCount; i++, vertex++) {
       float v[3] = { vertex->position.x, vertex->position.y, vertex->position.z };
-      vec3_init(*vertices, mat4_mulPoint(model->meta.globalTransforms + 16 * nodeIndex, v));
+      vec3_init(*vertices, mat4_mulPoint(node->globalTransform, v));
       *vertices += 3;
     }
 
@@ -296,6 +296,55 @@ void lovrModelDataGetTriangles(ModelData* model, float** vertices, uint32_t** in
 
   uint32_t baseIndex = 0;
   collectVertices(model, model->meta.rootNode, &positions, &indexData, &baseIndex);
+}
+
+void lovrModelDataGetMeshTriangles(ModelData* model, uint32_t meshIndex, float* transform, float** vertices, uint32_t** indices, uint32_t* vertexCount, uint32_t* indexCount) {
+  ModelMesh* mesh = &model->meta.meshes[meshIndex];
+
+  *vertexCount = mesh->vertexCount;
+  *indexCount = 0;
+
+  for (uint32_t i = 0; i < mesh->partCount; i++) {
+    if (mesh->parts[i].mode == DRAW_TRIANGLE_LIST) {
+      *indexCount += mesh->parts[i].count;
+    }
+  }
+
+  *vertices = lovrMalloc(*vertexCount * 3 * sizeof(float));
+  *indices = lovrMalloc(*indexCount * sizeof(uint32_t));
+
+  ModelVertex* vertex = model->vertices + mesh->vertexOffset;
+  for (uint32_t i = 0; i < mesh->vertexCount; i++, vertex++) {
+    mat4_mulPoint(transform, vec3_init(*vertices + 3 * i, &vertex->position.x));
+  }
+
+  uint32_t index = 0;
+  ModelPart* part = mesh->parts;
+  for (uint32_t p = 0; p < mesh->partCount; p++, part++) {
+    if (part->mode != DRAW_TRIANGLE_LIST) {
+      continue;
+    }
+
+    if (mesh->indexCount > 0) {
+      if (model->meta.indexSize == 4) {
+        uint32_t* indexData = (uint32_t*) model->indices + mesh->indexOffset + part->start;
+        for (uint32_t i = 0; i < part->count; i++, index++) {
+          (*indices)[index] = indexData[i] + part->baseVertex;
+        }
+      } else if (model->meta.indexSize == 2) {
+        uint16_t* indexData = (uint16_t*) model->indices + mesh->indexOffset + part->start;
+        for (uint32_t i = 0; i < part->count; i++, index++) {
+          (*indices)[index] = (uint32_t) indexData[i] + part->baseVertex;
+        }
+      } else {
+        lovrUnreachable();
+      }
+    } else {
+      for (uint32_t i = 0; i < part->count; i++, index++) {
+        (*indices)[index] = i;
+      }
+    }
+  }
 }
 
 static void boundingBoxHelper(ModelMetadata* meta, uint32_t nodeIndex) {
