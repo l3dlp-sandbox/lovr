@@ -131,6 +131,11 @@ typedef struct {
   uint32_t jointCount;
 } ModelSkin;
 
+typedef enum {
+  ORIGIN_ROOT,
+  ORIGIN_PARENT
+} OriginType;
+
 typedef struct {
   const char* name;
   union {
@@ -141,6 +146,7 @@ typedef struct {
       float scale[3];
     };
   } transform;
+  float* globalTransform;
   uint32_t child;
   uint32_t sibling;
   uint32_t parent;

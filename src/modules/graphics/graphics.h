@@ -525,11 +525,6 @@ typedef struct {
   uint32_t raytracerFlags;
 } ModelInfo;
 
-typedef enum {
-  ORIGIN_ROOT,
-  ORIGIN_PARENT
-} OriginType;
-
 Model* lovrModelCreate(const ModelInfo* info);
 Model* lovrModelClone(Model* model);
 void lovrModelDestroy(void* ref);
@@ -539,7 +534,7 @@ void lovrModelResetBlendShapes(Model* model);
 bool lovrModelAnimate(Model* model, uint32_t animationIndex, float time, float alpha);
 float lovrModelGetBlendShapeWeight(Model* model, uint32_t index);
 void lovrModelSetBlendShapeWeight(Model* model, uint32_t index, float weight);
-void lovrModelGetNodeTransform(Model* model, uint32_t node, float* position, float* scale, float* rotation, OriginType origin);
+void lovrModelGetNodeTransform(Model* model, uint32_t node, float* position, float* scale, float* rotation, int origin);
 void lovrModelSetNodeTransform(Model* model, uint32_t node, float* position, float* scale, float* rotation, float alpha);
 bool lovrModelIsNodeVisible(Model* model, uint32_t node);
 void lovrModelSetNodeVisible(Model* model, uint32_t node, bool visible);

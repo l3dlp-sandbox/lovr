@@ -27,6 +27,12 @@ StringEntry lovrModelDrawMode[] = {
   { 0 }
 };
 
+StringEntry lovrOriginType[] = {
+  [ORIGIN_ROOT] = ENTRY("root"),
+  [ORIGIN_PARENT] = ENTRY("parent"),
+  { 0 }
+};
+
 StringEntry lovrSmoothMode[] = {
   [SMOOTH_STEP] = ENTRY("step"),
   [SMOOTH_LINEAR] = ENTRY("linear"),

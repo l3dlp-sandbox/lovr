@@ -5940,7 +5940,7 @@ void lovrModelSetBlendShapeWeight(Model* model, uint32_t index, float weight) {
   model->blendShapesDirty = true;
 }
 
-void lovrModelGetNodeTransform(Model* model, uint32_t node, float* position, float* scale, float* rotation, OriginType origin) {
+void lovrModelGetNodeTransform(Model* model, uint32_t node, float* position, float* scale, float* rotation, int origin) {
   if (origin == ORIGIN_PARENT) {
     vec3_init(position, model->localTransforms[node].position);
     vec3_init(scale, model->localTransforms[node].scale);

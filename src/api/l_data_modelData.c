@@ -182,27 +182,28 @@ int l_lovrModelMetaGetNodeParent(lua_State* L) {
 int l_lovrModelMetaGetNodePosition(lua_State* L) {
   ModelMetadata* meta = luax_checkmodelmeta(L, 1);
   ModelNode* node = &meta->nodes[luax_checknodeindex(L, 2, meta)];
-  if (node->hasMatrix) {
-    float position[3];
-    mat4_getPosition(node->transform.matrix, position);
-    lua_pushnumber(L, position[0]);
-    lua_pushnumber(L, position[1]);
-    lua_pushnumber(L, position[2]);
-    return 3;
+  OriginType origin = luax_checkenum(L, 3, OriginType, "root");
+  if (node->hasMatrix || origin == ORIGIN_ROOT) {
+    float* matrix = origin == ORIGIN_ROOT ? node->globalTransform : node->transform.matrix;
+    lua_pushnumber(L, matrix[12]);
+    lua_pushnumber(L, matrix[13]);
+    lua_pushnumber(L, matrix[14]);
   } else {
     lua_pushnumber(L, node->transform.translation[0]);
     lua_pushnumber(L, node->transform.translation[1]);
     lua_pushnumber(L, node->transform.translation[2]);
-    return 3;
   }
+  return 3;
 }
 
 int l_lovrModelMetaGetNodeOrientation(lua_State* L) {
   ModelMetadata* meta = luax_checkmodelmeta(L, 1);
   ModelNode* node = &meta->nodes[luax_checknodeindex(L, 2, meta)];
+  OriginType origin = luax_checkenum(L, 3, OriginType, "root");
   float angle, ax, ay, az;
-  if (node->hasMatrix) {
-    mat4_getAngleAxis(node->transform.matrix, &angle, &ax, &ay, &az);
+  if (node->hasMatrix || origin == ORIGIN_ROOT) {
+    float* matrix = origin == ORIGIN_ROOT ? node->globalTransform : node->transform.matrix;
+    mat4_getAngleAxis(matrix, &angle, &ax, &ay, &az);
   } else {
     quat_getAngleAxis(node->transform.rotation, &angle, &ax, &ay, &az);
   }
@@ -216,9 +217,11 @@ int l_lovrModelMetaGetNodeOrientation(lua_State* L) {
 int l_lovrModelMetaGetNodeScale(lua_State* L) {
   ModelMetadata* meta = luax_checkmodelmeta(L, 1);
   ModelNode* node = &meta->nodes[luax_checknodeindex(L, 2, meta)];
-  if (node->hasMatrix) {
+  OriginType origin = luax_checkenum(L, 3, OriginType, "root");
+  if (node->hasMatrix || origin == ORIGIN_ROOT) {
     float scale[3];
-    mat4_getScale(node->transform.matrix, scale);
+    float* matrix = origin == ORIGIN_ROOT ? node->globalTransform : node->transform.matrix;
+    mat4_getScale(matrix, scale);
     lua_pushnumber(L, scale[0]);
     lua_pushnumber(L, scale[1]);
     lua_pushnumber(L, scale[2]);
@@ -233,10 +236,12 @@ int l_lovrModelMetaGetNodeScale(lua_State* L) {
 int l_lovrModelMetaGetNodePose(lua_State* L) {
   ModelMetadata* meta = luax_checkmodelmeta(L, 1);
   ModelNode* node = &meta->nodes[luax_checknodeindex(L, 2, meta)];
-  if (node->hasMatrix) {
+  OriginType origin = luax_checkenum(L, 3, OriginType, "root");
+  if (node->hasMatrix || origin == ORIGIN_ROOT) {
     float position[3], angle, ax, ay, az;
-    mat4_getPosition(node->transform.matrix, position);
-    mat4_getAngleAxis(node->transform.matrix, &angle, &ax, &ay, &az);
+    float* matrix = origin == ORIGIN_ROOT ? node->globalTransform : node->transform.matrix;
+    mat4_getPosition(matrix, position);
+    mat4_getAngleAxis(matrix, &angle, &ax, &ay, &az);
     lua_pushnumber(L, position[0]);
     lua_pushnumber(L, position[1]);
     lua_pushnumber(L, position[2]);
@@ -261,11 +266,13 @@ int l_lovrModelMetaGetNodePose(lua_State* L) {
 int l_lovrModelMetaGetNodeTransform(lua_State* L) {
   ModelMetadata* meta = luax_checkmodelmeta(L, 1);
   ModelNode* node = &meta->nodes[luax_checknodeindex(L, 2, meta)];
-  if (node->hasMatrix) {
+  OriginType origin = luax_checkenum(L, 3, OriginType, "root");
+  if (node->hasMatrix || origin == ORIGIN_ROOT) {
     float position[3], scale[4], angle, ax, ay, az;
-    mat4_getPosition(node->transform.matrix, position);
-    mat4_getScale(node->transform.matrix, scale);
-    mat4_getAngleAxis(node->transform.matrix, &angle, &ax, &ay, &az);
+    float* matrix = origin == ORIGIN_ROOT ? node->globalTransform : node->transform.matrix;
+    mat4_getPosition(matrix, position);
+    mat4_getScale(matrix, scale);
+    mat4_getAngleAxis(matrix, &angle, &ax, &ay, &az);
     lua_pushnumber(L, position[0]);
     lua_pushnumber(L, position[1]);
     lua_pushnumber(L, position[2]);

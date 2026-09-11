@@ -24,6 +24,7 @@ dev
 - Add `doubleSided` property to `Material`.
 - Add `Model:setMaterial`.
 - Add `shaderDrawParameters` `GraphicsFeature`.
+- Add `OriginType` parameter to `ModelData` node transform accessors.
 
 ### Change
 
@@ -45,6 +46,7 @@ dev
 - Change `lovr.headset.isVisible` to also return whether the main session is visible, for overlays.
 - Change `lovr.graphics.newMaterial` to also take a `Texture` or an `Image`.
 - Change `uvShift` and `uvScale` material properties to be named `quad`.
+- Change `ModelData` node accessors to return transforms in global space by default.
 
 ### Fix
 

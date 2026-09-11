@@ -180,12 +180,6 @@ StringEntry lovrMeshStorage[] = {
   { 0 }
 };
 
-StringEntry lovrOriginType[] = {
-  [ORIGIN_ROOT] = ENTRY("root"),
-  [ORIGIN_PARENT] = ENTRY("parent"),
-  { 0 }
-};
-
 StringEntry lovrProjectionType[] = {
   [PROJECTION_MATRIX] = ENTRY("matrix"),
   [PROJECTION_ORTHOGRAPHIC] = ENTRY("orthographic"),

@@ -132,10 +132,11 @@ void lovrModelDataAllocate(ModelData* model) {
   }
 
   for (uint32_t i = 0; i < meta->nodeCount; i++) {
-    mat4_identity(meta->globalTransforms + 16 * i);
     vec3_set(meta->nodes[i].transform.translation, 0.f, 0.f, 0.f);
     quat_identity(meta->nodes[i].transform.rotation);
     vec3_set(meta->nodes[i].transform.scale, 1.f, 1.f, 1.f);
+    meta->nodes[i].globalTransform = meta->globalTransforms + 16 * i;
+    mat4_identity(meta->nodes[i].globalTransform);
     meta->nodes[i].hasMatrix = false;
     meta->nodes[i].child = ~0u;
     meta->nodes[i].sibling = ~0u;
@@ -152,23 +153,24 @@ void lovrModelDataAllocate(ModelData* model) {
   meta->bounds[5] = -FLT_MAX;
 }
 
-static void setGlobalTransform(ModelMetadata* meta, uint32_t nodeIndex, float* parentTransform) {
+static void setGlobalTransform(ModelMetadata* meta, uint32_t nodeIndex) {
   ModelNode* node = &meta->nodes[nodeIndex];
-  float* transform = meta->globalTransforms + 16 * nodeIndex;
 
-  mat4_init(transform, parentTransform);
+  if (node->parent != ~0u) {
+    mat4_init(node->globalTransform, meta->nodes[node->parent].globalTransform);
+  }
 
   if (node->hasMatrix) {
-    mat4_mul(transform, node->transform.matrix);
+    mat4_mul(node->globalTransform, node->transform.matrix);
   } else {
     float matrix[16];
     float* S = node->transform.scale;
     mat4_scale(mat4_fromPose(matrix, node->transform.translation, node->transform.rotation), S[0], S[1], S[2]);
-    mat4_mul(transform, matrix);
+    mat4_mul(node->globalTransform, matrix);
   }
 
   for (uint32_t i = node->child; i != ~0u; i = meta->nodes[i].sibling) {
-    setGlobalTransform(meta, i, transform);
+    setGlobalTransform(meta, i);
   }
 }
 
@@ -189,8 +191,7 @@ bool lovrModelDataFinalize(ModelData* model) {
     }
   }
 
-  float transform[16] = MAT4_IDENTITY;
-  setGlobalTransform(&model->meta, model->meta.rootNode, transform);
+  setGlobalTransform(&model->meta, model->meta.rootNode);
 
   for (uint32_t i = 0; i < meta->blendShapeCount; i++) {
     const char* name = meta->blendShapes[i].name;
@@ -299,7 +300,7 @@ void lovrModelDataGetTriangles(ModelData* model, float** vertices, uint32_t** in
 
 static void boundingBoxHelper(ModelMetadata* meta, uint32_t nodeIndex) {
   ModelNode* node = &meta->nodes[nodeIndex];
-  mat4 m = meta->globalTransforms + 16 * nodeIndex;
+  mat4 m = node->globalTransform;
 
   if (node->mesh != ~0u) {
     ModelMesh* mesh = &meta->meshes[node->mesh];
