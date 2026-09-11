@@ -48,7 +48,7 @@ void lovrModelDataAllocate(ModelData* model) {
   ModelMetadata* meta = &model->meta;
 
   size_t totalSize = 0;
-  size_t sizes[17];
+  size_t sizes[18];
   size_t alignment = 8;
   totalSize += sizes[0] = ALIGN(meta->meshCount * sizeof(ModelMesh), alignment);
   totalSize += sizes[1] = ALIGN(meta->materialCount * sizeof(ModelMaterial), alignment);
@@ -61,12 +61,13 @@ void lovrModelDataAllocate(ModelData* model) {
   totalSize += sizes[8] = ALIGN(meta->keyframeDataCount * sizeof(float), alignment);
   totalSize += sizes[9] = ALIGN(meta->jointCount * 16 * sizeof(float), alignment);
   totalSize += sizes[10] = ALIGN(meta->jointCount * sizeof(uint32_t), alignment);
-  totalSize += sizes[11] = ALIGN(meta->charCount * sizeof(char), alignment);
-  totalSize += sizes[12] = ALIGN(meta->blendShapeCount * sizeof(uint32_t), alignment);
-  totalSize += sizes[13] = ALIGN(meta->animationCount * sizeof(uint32_t), alignment);
-  totalSize += sizes[14] = ALIGN(meta->materialCount * sizeof(uint32_t), alignment);
-  totalSize += sizes[15] = ALIGN(meta->nodeCount * sizeof(uint32_t), alignment);
-  totalSize += sizes[16] = ALIGN(meta->commentLength, alignment);
+  totalSize += sizes[11] = ALIGN(meta->nodeCount * 16 * sizeof(float), alignment);
+  totalSize += sizes[12] = ALIGN(meta->charCount * sizeof(char), alignment);
+  totalSize += sizes[13] = ALIGN(meta->blendShapeCount * sizeof(uint32_t), alignment);
+  totalSize += sizes[14] = ALIGN(meta->animationCount * sizeof(uint32_t), alignment);
+  totalSize += sizes[15] = ALIGN(meta->materialCount * sizeof(uint32_t), alignment);
+  totalSize += sizes[16] = ALIGN(meta->nodeCount * sizeof(uint32_t), alignment);
+  totalSize += sizes[17] = ALIGN(meta->commentLength, alignment);
 
   size_t offset = 0;
   char* p = lovrCalloc(totalSize);
@@ -82,12 +83,13 @@ void lovrModelDataAllocate(ModelData* model) {
   meta->keyframeData = (float*) (p + offset), offset += sizes[8];
   meta->inverseBindMatrices = (float*) (p + offset), offset += sizes[9];
   meta->joints = (uint32_t*) (p + offset), offset += sizes[10];
-  meta->chars = (char*) (p + offset), offset += sizes[11];
-  meta->blendShapeLookup = (uint32_t*) (p + offset), offset += sizes[12];
-  meta->animationLookup = (uint32_t*) (p + offset), offset += sizes[13];
-  meta->materialLookup = (uint32_t*) (p + offset), offset += sizes[14];
-  meta->nodeLookup = (uint32_t*) (p + offset), offset += sizes[15];
-  meta->comment = (char*) (p + offset), offset += sizes[16];
+  meta->globalTransforms = (float*) (p + offset), offset += sizes[11];
+  meta->chars = (char*) (p + offset), offset += sizes[12];
+  meta->blendShapeLookup = (uint32_t*) (p + offset), offset += sizes[13];
+  meta->animationLookup = (uint32_t*) (p + offset), offset += sizes[14];
+  meta->materialLookup = (uint32_t*) (p + offset), offset += sizes[15];
+  meta->nodeLookup = (uint32_t*) (p + offset), offset += sizes[16];
+  meta->comment = (char*) (p + offset), offset += sizes[17];
 
   model->vertices = meta->vertexCount > 0 ? lovrMalloc(meta->vertexCount * sizeof(ModelVertex)) : NULL;
   model->indices = meta->indexCount > 0 ? lovrMalloc(meta->indexCount * meta->indexSize) : NULL;
@@ -130,6 +132,7 @@ void lovrModelDataAllocate(ModelData* model) {
   }
 
   for (uint32_t i = 0; i < meta->nodeCount; i++) {
+    mat4_identity(meta->globalTransforms + 16 * i);
     vec3_set(meta->nodes[i].transform.translation, 0.f, 0.f, 0.f);
     quat_identity(meta->nodes[i].transform.rotation);
     vec3_set(meta->nodes[i].transform.scale, 1.f, 1.f, 1.f);
@@ -149,6 +152,26 @@ void lovrModelDataAllocate(ModelData* model) {
   meta->bounds[5] = -FLT_MAX;
 }
 
+static void setGlobalTransform(ModelMetadata* meta, uint32_t nodeIndex, float* parentTransform) {
+  ModelNode* node = &meta->nodes[nodeIndex];
+  float* transform = meta->globalTransforms + 16 * nodeIndex;
+
+  mat4_init(transform, parentTransform);
+
+  if (node->hasMatrix) {
+    mat4_mul(transform, node->transform.matrix);
+  } else {
+    float matrix[16];
+    float* S = node->transform.scale;
+    mat4_scale(mat4_fromPose(matrix, node->transform.translation, node->transform.rotation), S[0], S[1], S[2]);
+    mat4_mul(transform, matrix);
+  }
+
+  for (uint32_t i = node->child; i != ~0u; i = meta->nodes[i].sibling) {
+    setGlobalTransform(meta, i, transform);
+  }
+}
+
 bool lovrModelDataFinalize(ModelData* model) {
   ModelMetadata* meta = &model->meta;
 
@@ -165,6 +188,9 @@ bool lovrModelDataFinalize(ModelData* model) {
       }
     }
   }
+
+  float transform[16] = MAT4_IDENTITY;
+  setGlobalTransform(&model->meta, model->meta.rootNode, transform);
 
   for (uint32_t i = 0; i < meta->blendShapeCount; i++) {
     const char* name = meta->blendShapes[i].name;
@@ -189,22 +215,8 @@ bool lovrModelDataFinalize(ModelData* model) {
   return true;
 }
 
-static void collectVertices(ModelData* model, uint32_t nodeIndex, float** vertices, uint32_t** indices, uint32_t* baseIndex, float* parentTransform) {
+static void collectVertices(ModelData* model, uint32_t nodeIndex, float** vertices, uint32_t** indices, uint32_t* baseIndex) {
   ModelNode* node = &model->meta.nodes[nodeIndex];
-
-  float m[16];
-  mat4_init(m, parentTransform);
-
-  if (node->hasMatrix) {
-    mat4_mul(m, node->transform.matrix);
-  } else {
-    float* T = node->transform.translation;
-    float* R = node->transform.rotation;
-    float* S = node->transform.scale;
-    mat4_translate(m, T[0], T[1], T[2]);
-    mat4_rotateQuat(m, R);
-    mat4_scale(m, S[0], S[1], S[2]);
-  }
 
   if (node->mesh != ~0u) {
     ModelMesh* mesh = &model->meta.meshes[node->mesh];
@@ -213,7 +225,7 @@ static void collectVertices(ModelData* model, uint32_t nodeIndex, float** vertic
 
     for (uint32_t i = 0; i < mesh->vertexCount; i++, vertex++) {
       float v[3] = { vertex->position.x, vertex->position.y, vertex->position.z };
-      vec3_init(*vertices, mat4_mulPoint(m, v));
+      vec3_init(*vertices, mat4_mulPoint(model->meta.globalTransforms + 16 * nodeIndex, v));
       *vertices += 3;
     }
 
@@ -252,7 +264,7 @@ static void collectVertices(ModelData* model, uint32_t nodeIndex, float** vertic
   }
 
   for (uint32_t i = node->child; i != ~0u; i = model->meta.nodes[i].sibling) {
-    collectVertices(model, i, vertices, indices, baseIndex, m);
+    collectVertices(model, i, vertices, indices, baseIndex);
   }
 }
 
@@ -282,24 +294,12 @@ void lovrModelDataGetTriangles(ModelData* model, float** vertices, uint32_t** in
   if (indices) *indices = indexData;
 
   uint32_t baseIndex = 0;
-  collectVertices(model, model->meta.rootNode, &positions, &indexData, &baseIndex, (float[16]) MAT4_IDENTITY);
+  collectVertices(model, model->meta.rootNode, &positions, &indexData, &baseIndex);
 }
 
-static void boundingBoxHelper(ModelMetadata* meta, uint32_t nodeIndex, float* parentTransform) {
+static void boundingBoxHelper(ModelMetadata* meta, uint32_t nodeIndex) {
   ModelNode* node = &meta->nodes[nodeIndex];
-
-  float m[16];
-  mat4_init(m, parentTransform);
-
-  if (node->hasMatrix) {
-    mat4_mul(m, node->transform.matrix);
-  } else {
-    float* T = node->transform.translation;
-    float* R = node->transform.rotation;
-    float* S = node->transform.scale;
-    mat4_fromPose(m, T, R);
-    mat4_scale(m, S[0], S[1], S[2]);
-  }
+  mat4 m = meta->globalTransforms + 16 * nodeIndex;
 
   if (node->mesh != ~0u) {
     ModelMesh* mesh = &meta->meshes[node->mesh];
@@ -342,13 +342,13 @@ static void boundingBoxHelper(ModelMetadata* meta, uint32_t nodeIndex, float* pa
   }
 
   for (uint32_t i = node->child; i != ~0u; i = meta->nodes[i].sibling) {
-    boundingBoxHelper(meta, i, m);
+    boundingBoxHelper(meta, i);
   }
 }
 
 void lovrModelMetadataGetBoundingBox(ModelMetadata* meta, float box[6]) {
   if (meta->bounds[1] < meta->bounds[0]) {
-    boundingBoxHelper(meta, meta->rootNode, (float[16]) MAT4_IDENTITY);
+    boundingBoxHelper(meta, meta->rootNode);
   }
 
   memcpy(box, meta->bounds, sizeof(meta->bounds));

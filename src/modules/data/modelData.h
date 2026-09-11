@@ -182,6 +182,7 @@ typedef struct ModelMetadata {
   float* keyframeData;
   float* inverseBindMatrices;
   uint32_t* joints;
+  float* globalTransforms;
   char* chars;
 
   uint32_t vertexCount;
