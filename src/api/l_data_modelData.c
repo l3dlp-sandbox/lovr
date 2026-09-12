@@ -500,6 +500,8 @@ int l_lovrModelDataGetTriangles(lua_State* L) {
     lua_pushinteger(L, indices[i] + 1);
     lua_rawseti(L, -2, (int) i + 1);
   }
+  lovrFree(vertices);
+  lovrFree(indices);
   return 2;
 }
 
